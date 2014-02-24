@@ -152,6 +152,74 @@ JS;
     }
 
     /**
+     * Drag one element onto another with the Syn.drag() function.
+     *
+     * Add a new function for elements which use the Moodle
+     * moodle-core-dragdrop-draghandle to use the Syn drag function
+     * which works with YUI drag and drop.
+     *
+     * @param   string  $sourceXpath
+     * @param   string  $destinationXpath
+     */
+    public function dragToWithHandle($sourceXpath, $destinationXpath)
+    {
+        // Get the id of the destination element - the drop target
+        // either has an ID or has gotten a YUIid
+        $toID = $this->getAttribute($destinationXpath, 'id');
+
+        // Set the source (from) element via the executeJsOnXpath call.
+        // Set destination (drop target) id with $toID.
+        // Get the YUI nodes for the two elements and calculate the
+        // position of both elemnts and the width/height of the drop target.
+        // Set the parameters for the Syn.drag function with the
+        // calculated values. Set the drop point to the middle width
+        // and third height of the drop target. Get the DOM node from
+        // the YUI node for the third parameter - the element which is draged.
+        $script = <<<JS
+(function (element) {
+    var Yfrom = Y.one(element),
+        YdragHandle = Yfrom.one('.moodle-core-dragdrop-draghandle'),
+        Yto = Y.one('#{$toID}'),
+        _toRegion = Yto.getAttribute('data-blockregion');
+
+    // If the target region is a block region and is empty
+    // and therefore hidden make the target region visible
+    // before we can get the region position and size
+    if (typeof _toRegion !== 'undefined' && Yto.getComputedStyle('display') === 'none') {
+        Ybody = Y.one('body');
+        if (Ybody.hasClass('empty-region-' + _toRegion)) {
+            Ybody.removeClass('empty-region-' + _toRegion);
+            Ybody.addClass('used-region-' + _toRegion);
+        }
+    }
+
+    var _from = YdragHandle.getXY(),
+        _to = Yto.getXY(),
+        _toW = parseInt(Yto.getComputedStyle('width'), 10),
+        _toH = parseInt(Yto.getComputedStyle('height'), 10);
+
+    Syn.drag(
+        {
+            from: {pageX: _from[0] + 5, pageY: _from[1] + 5},
+            to: {pageX: Math.floor(_to[0] + _toW / 2), pageY: Math.floor(_to[1] + _toH / 3)},
+            duration: 500
+
+        },
+        Yfrom.getDOMNode()
+    );
+}({{ELEMENT}}));
+JS;
+        // Wait 2 seconds to give YUI time to initialize drag and drop
+        $this->wait(2000, null);
+
+        $this->withSyn()->executeJsOnXpath($sourceXpath, $script);
+
+        // Wait 1 second to give Syn time to move the element and
+        // YUI time to handle the drop
+        $this->wait(1000, null);
+    }
+
+    /**
      * Overwriten method to use our custom Syn library.
      *
      * Makes sure that the Syn event library has been injected into the current page,
