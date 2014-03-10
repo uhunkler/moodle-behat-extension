@@ -180,7 +180,8 @@ JS;
     var Yfrom = Y.one(element),
         YdragHandle = Yfrom.one('.moodle-core-dragdrop-draghandle'),
         Yto = Y.one('#{$toID}'),
-        _toRegion = Yto.getAttribute('data-blockregion');
+        _toRegion = Yto.getAttribute('data-blockregion'),
+        _resetregion = false;
 
     // If the target region is a block region and is empty
     // and therefore hidden make the target region visible
@@ -190,6 +191,7 @@ JS;
         if (Ybody.hasClass('empty-region-' + _toRegion)) {
             Ybody.removeClass('empty-region-' + _toRegion);
             Ybody.addClass('used-region-' + _toRegion);
+            _resetregion = true;
         }
     }
 
@@ -198,15 +200,25 @@ JS;
         _toW = parseInt(Yto.getComputedStyle('width'), 10),
         _toH = parseInt(Yto.getComputedStyle('height'), 10);
 
+    if (_resetregion) {
+        Ybody.removeClass('used-region-' + _toRegion);
+        Ybody.addClass('empty-region-' + _toRegion);
+    }
+
+    // Scroll the drag source into the view
+    window.scroll(_from[0], _from[1]);
+
     Syn.drag(
         {
             from: {pageX: _from[0] + 5, pageY: _from[1] + 5},
             to: {pageX: Math.floor(_to[0] + _toW / 2), pageY: Math.floor(_to[1] + _toH / 3)},
-            duration: 500
-
+            duration: 300
         },
         Yfrom.getDOMNode()
     );
+
+    // Scroll the drop source into the view
+    window.scroll(_to[0], _to[1]);
 }({{ELEMENT}}));
 JS;
         // Wait 2 seconds to give YUI time to initialize drag and drop
