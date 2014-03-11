@@ -211,7 +211,7 @@ JS;
     Syn.drag(
         {
             from: {pageX: _from[0] + 5, pageY: _from[1] + 5},
-            to: {pageX: Math.floor(_to[0] + _toW / 2), pageY: Math.floor(_to[1] + _toH / 3)},
+            to: {pageX: Math.floor(_to[0] + 5), pageY: Math.floor(_to[1] + 5)},
             duration: 300
         },
         Yfrom.getDOMNode()
